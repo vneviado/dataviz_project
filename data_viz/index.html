@@ -21,6 +21,11 @@ p {
   font: 13px Arial;
 }
 
+#div_template {
+  width: 100%;
+  background-color: #111;
+}
+
 html, body {
   height: 100%;
 }
@@ -28,17 +33,32 @@ body {
   color: #000;
 }
 
+  .axis path,
+  .axis line {
+    fill: none;
+    stroke: #000;
+    shape-rendering: crispEdges;
+  }
+
+  .point {
+    fill: orange;
+  }
+
+  .point:hover {
+    fill: orangered;
+  }
+
 </style>
 
 <!-- https://www.jqueryscript.net/layout/Create-A-Single-Page-Scrolling-Website-with-jQuery-CSS3-singular-js.html -->
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="js/jquery.min.js"></script>
+<script src="js/jquery-ui.js"></script>
 <script src="js/jquery.mousewheel.min.js"></script>
 <script src="js/jquery.easing.js"></script>
 <script src="js/jquery.singular.js"></script>
 <script src="https://d3js.org/d3.v3.min.js"></script>
-<script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+<script src="js/wordcloud.js"></script>
 
 <script>
 $(function() {
@@ -61,11 +81,12 @@ $(function() {
 
 <body>
 
-  <div class="mod-page">
+<!--   <div class="mod-page">
     <div class="mod-singular js-singular">
 
       <div id="sec01" class="mod-singular-section">
-        <div class="mod-singular-section-in">
+        <div class="mod-singular-section-in"> -->
+          
           <h2>
             </br>
             <p>Most Common Mental Health Disorders</p>
@@ -77,21 +98,26 @@ $(function() {
           <div id="legend">
           </div>
 
+          <h2>Hear the stories</h2>
+
           <div id = "div_template">
+          </div>
+          </br>
+
+          <h2>How can we fix the issue?</h2>
+
+          <div id = "div_template2">
           </div>
 
         </div>
       </div>
 
-      <section id="sec02" class="mod-singular-section">
-        <div class="mod-singular-section-in">
-          <p>Most Common Mental Health Disorders</p>
-          <div id="waffle">
-          </div>
-        </div>
-      </section>
+<!--       <section id="sec02" class="mod-singular-section">
+        <div class="mod-singular-section-in"> -->
+<!--         </div>
+      </section> -->
 
-      <section id="sec03" class="mod-singular-section">
+<!--       <section id="sec03" class="mod-singular-section">
         <div class="mod-singular-section-in">
           <div id="waffle">
           </div>
@@ -107,7 +133,7 @@ $(function() {
       </ul>
     </div>
 
-  </div>
+  </div> -->
   
 <script src="https://d3js.org/d3-color.v1.min.js"></script>
 
@@ -126,6 +152,8 @@ var width,
 var fill = d3.scale.category20b();
 
 d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJVDax52ns9czpN7rIARNBbOWkdsIKIlxBLOQGge78kUE0CFrfLECyQH9/pub?output=csv", function(error, data)
+
+  //https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJVDax52ns9czpN7rIARNBbOWkdsIKIlxBLOQGge78kUE0CFrfLECyQH9/pub?output=csv
 {
   //total
   total = d3.sum(data, function(d) { return d.population; });
@@ -215,7 +243,113 @@ d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJ
 
 </script>
 
-<script>
+  <script>
+    var margin = { top: 20, right: 20, bottom: 30, left: 40 },
+      width = 1240 - margin.left - margin.right,
+      height = 500 - margin.top - margin.bottom;
+
+    var x = d3.scale.linear().range([0, width]);
+
+    var y = d3.scale.linear().range([height, 0]);
+
+    var svg = d3
+      .select("#div_template")
+      .append("svg")
+      .attr("width", width + margin.left + margin.right)
+      .attr("height", height + margin.top + margin.bottom)
+      .append("g")
+      .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+
+    d3.csv(
+      "https://docs.google.com/spreadsheets/d/e/2PACX-1vRV-ENCVgANYqmjS8CbbJzCo2Atmcyt_cnlMxOorP0FWDt_f1WIQqDmakDG-EIOV9eepUxKQazCfHOI/pub?output=csv",
+      function(error, data) {
+        if (error) throw error;
+
+        //https://docs.google.com/spreadsheets/d/e/2PACX-1vRV-ENCVgANYqmjS8CbbJzCo2Atmcyt_cnlMxOorP0FWDt_f1WIQqDmakDG-EIOV9eepUxKQazCfHOI/pub?output=csv
+
+        // Coerce the strings to numbers.
+        data.forEach(function(d) {
+          d.x = Math.random();
+          d.y = Math.random();
+          if (d.long_answer != null && d.long_answer.length > 0) {
+            d.answer = d.long_answer;
+          } else {
+            d.answer = "";
+          }
+          //d.link = "https://image.flaticon.com/icons/png/512/10/10522.png"
+          //d.long_answer = +d.long_answer;
+        });
+
+        // Compute the scales’ domains.
+        x.domain(
+          d3.extent(data, function(d) {
+            return d.x;
+          })
+        ).nice();
+        y.domain(
+          d3.extent(data, function(d) {
+            return d.y;
+          })
+        ).nice();
+
+        var Tooltip = d3
+          .select("#div_template")
+          .append("div")
+          .style("opacity", 0)
+          .attr("class", "tooltip")
+          .style("background-color", "white")
+          .style("border", "solid")
+          .style("border-width", "2px")
+          .style("border-radius", "5px")
+          .style("padding", "5px")
+          .style("width", "300px")
+          .style("font-size", "12px")
+          .style("position", "absolute")
+          .style("z-index", "10");
+
+        // Three function that change the tooltip when user hover / move / leave a cell
+        var mouseover = function(d) {
+          Tooltip.style("opacity", 1)
+            .style("left", d3.mouse(this)[0] + 100 + "px")
+            .style("top", d3.mouse(this)[1] + 100 + "px");
+          d3.select(this)
+            .style("stroke", "black")
+            .style("opacity", 1);
+        };
+        var mousemove = function(d) {
+          Tooltip.html("" + d.answer)
+            .style("left", event.pageX - 10 + "px")
+            .style("top", event.pageY + 10 + "px");
+        };
+        var mouseleave = function(d) {
+          Tooltip.style("opacity", 0);
+          d3.select(this)
+            .style("stroke", "none")
+            .style("opacity", 0.8);
+        };
+
+        // Add the points!
+        svg
+          .selectAll(".point")
+          .data(data)
+          .enter()
+          .append("path")
+          .filter(function(d) { return d.answer != ""})
+          //.append('image')
+          //.attr("xlink:href", function(d){ return d.link })
+          .attr("class", "point")
+          .attr("d", d3.svg.symbol().type("circle"))
+          .attr("transform", function(d) {
+            return "translate(" + x(d.x) + "," + y(d.y) + ")";
+          })
+          .on("mouseover", mouseover)
+          .on("mousemove", mousemove)
+          .on("mouseleave", mouseleave);
+      }
+    );
+  </script>
+
+  <script>
 
   var fill = d3.scale.category20b();
   var data = [{word:"treat as physical health",weight:20},{word:"talk about it",weight:58},{word:"mental health days",weight:5},{word:"remove the stigma",weight:14},{word:"no overtime/work-life balance",weight:6},{word:"raise awareness",weight:18},{word:"education",weight:5},{word:"discussion",weight:19},{word:"work from home",weight:6},{word:"be open",weight:52},{word:"time off",weight:8},{word:"health benefits",weight:7},{word:"culture",weight:10},{word:"health days",weight:8}];
@@ -224,13 +358,13 @@ d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJ
     width = 800 - margin.left - margin.right,
     height = 500 - margin.top - margin.bottom;
 
-  var svg = d3.select("#div_template").append("svg")
+  var svg2 = d3.select("#div_template2").append("svg2")
     .attr("width", width + margin.left + margin.right)
     .attr("height", height + margin.top + margin.bottom)
   .append("g")
     .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
       
-  d3.layout.cloud().size([700, 500])
+d3.layout.cloud().size([600, 500])
       .words(data.map(function(d) {
         return {text: d.word, size: d.weight};
       }))
@@ -260,7 +394,7 @@ d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJ
         .text(function(d) { return d.text; });
   }
 
-      d3.select("svg")
+      d3.select("svg2")
       .selectAll("g")
         .attr("transform", "translate(150,150)")
       .selectAll("text")
