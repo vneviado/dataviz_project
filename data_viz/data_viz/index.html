@@ -250,7 +250,7 @@ d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJ
           } else {
             d.answer = "";
           }
-          //d.link = "https://image.flaticon.com/icons/png/512/10/10522.png"
+          d.link = "https://image.flaticon.com/icons/png/512/10/10522.png"
           //d.long_answer = +d.long_answer;
         });
 
@@ -309,8 +309,8 @@ d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJ
           .enter()
           .append("path")
           .filter(function(d) { return d.answer != ""})
-          //.append('image')
-          //.attr("xlink:href", function(d){ return d.link })
+          .append('image')
+          .attr("xlink:href", function(d){ return d.link })
           .attr("class", "point")
           .attr("d", d3.svg.symbol().type("circle"))
           .attr("transform", function(d) {
