@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><meta charset="utf-8">
+<style>
+
+body {
+  font: 18px Arial;
+  background-color: #eee;
+}
+
+p {
+  margin: 0;
+}
+  
+#waffle {
+  margin-bottom: 30px;
+}
+
+#legend {
+  font: 13px Arial;
+}
+
+html, body {
+  height: 100%;
+}
+body {
+  color: #000;
+}
+
+</style>
+
+<!-- https://www.jqueryscript.net/layout/Create-A-Single-Page-Scrolling-Website-with-jQuery-CSS3-singular-js.html -->
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+<script src="js/jquery.mousewheel.min.js"></script>
+<script src="js/jquery.easing.js"></script>
+<script src="js/jquery.singular.js"></script>
+<script src="https://d3js.org/d3.v3.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/holtzy/D3-graph-gallery@master/LIB/d3.layout.cloud.js"></script>
+
+<script>
+$(function() {
+    $('.js-singular').singular({
+        section: '.mod-singular-section',
+        nav: '.js-singular-nav',
+        prev: '.js-singular-prev',
+        next: '.js-singular-next',
+        navActiveClass: 'js-singular-active',
+        scrollSpeed: 1000,
+        mousewheel: true,
+        easing: 'easeInOutQuart',
+        scrollEnd: function(elem) {
+        }
+    });
+});
+</script>
+
+</head>
+
+<body>
+
+  <div class="mod-page">
+    <div class="mod-singular js-singular">
+
+      <div id="sec01" class="mod-singular-section">
+        <div class="mod-singular-section-in">
+          <h2>
+            </br>
+            <p>Most Common Mental Health Disorders</p>
+          </h2>
+
+          <div id="waffle">
+          </div>
+
+          <div id="legend">
+          </div>
+
+          <div id = "div_template">
+          </div>
+
+        </div>
+      </div>
+
+      <section id="sec02" class="mod-singular-section">
+        <div class="mod-singular-section-in">
+          <p>Most Common Mental Health Disorders</p>
+          <div id="waffle">
+          </div>
+        </div>
+      </section>
+
+      <section id="sec03" class="mod-singular-section">
+        <div class="mod-singular-section-in">
+          <div id="waffle">
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="mod-nav">
+      <ul class="mod-nav-list js-singular-nav">
+        <li class="mod-nav-item"><a href="#sec01"> Section 1 </a></li>
+        <li class="mod-nav-item"><a href="#sec02"> Section 2 </a></li>
+        <li class="mod-nav-item"><a href="#sec03"> Section 3 </a></li>
+      </ul>
+    </div>
+
+  </div>
+  
+<script src="https://d3js.org/d3-color.v1.min.js"></script>
+
+<script>
+
+var total = 0;
+var width,
+    height,
+    widthSquares = 12,
+    heightSquares = 5,
+    squareSize = 28,
+    squareValue = 0,
+    gap = 1,
+    theData = [];  
+  
+var fill = d3.scale.category20b();
+
+d3.csv("https://docs.google.com/spreadsheets/d/e/2PACX-1vSOWkvZuGzGICcEaEwrH3qWJVDax52ns9czpN7rIARNBbOWkdsIKIlxBLOQGge78kUE0CFrfLECyQH9/pub?output=csv", function(error, data)
+{
+  //total
+  total = d3.sum(data, function(d) { return d.population; });
+
+  //value of a square
+  squareValue = total / (widthSquares*heightSquares);
+  
+  //remap data
+  data.forEach(function(d, i) 
+  {
+      //d.population = +d.population;
+      d.units = Math.floor(d.population/squareValue);
+      theData = theData.concat(
+        Array(d.units+1).join(1).split('').map(function()
+          {
+            return {  squareValue:squareValue,                      
+                      units: d.units,
+                      population: d.population,
+                      groupIndex: i};
+          })
+        );
+  });
+
+  width = (squareSize*widthSquares) + widthSquares*gap + 25;
+  height = (squareSize*heightSquares) + heightSquares*gap + 25;
+
+  var waffle = d3.select("#waffle")
+      .append("svg")
+      .attr("width", width)
+      .attr("height", height)
+      .append("g")
+      .selectAll("div")
+      .data(theData)
+      .enter()
+      .append("rect")
+      .attr("width", squareSize)
+      .attr("height", squareSize)
+      .attr("fill", function(d)
+      {
+        return fill(d.groupIndex);
+      })
+      .attr("x", function(d, i)
+        {
+          //group n squares for column
+          col = Math.floor(i/heightSquares);
+          return (col*squareSize) + (col*gap);
+        })
+      .attr("y", function(d, i)
+      {
+        row = i%heightSquares;
+        return (heightSquares*squareSize) - ((row*squareSize) + (row*gap))
+      })
+      .append("title")
+      .text(function (d,i) {
+        return "Disorders: " + data[d.groupIndex].disorder + " | " +  d.population + " , " + d.units + "%"
+      });
+
+   //add legend with categorical data
+   var legend = d3.select("#legend")
+    .append("svg")
+    .attr('width', 400)
+    .attr('height', 200)
+    .append('g')
+    .selectAll("div")
+    .data(data)
+    .enter()
+      .append("g")
+      .attr('transform', function(d,i){ return "translate(0," + i*20 + ")";});
+
+  legend.append("rect")
+    .attr("width", 18)
+    .attr("height", 18)
+    .style("fill", function(d, i) { return fill(i)});
+
+  legend.append("text")
+    .attr("x", 25)
+    .attr("y", 13)
+    .text( function(d) { return d.disorder + " | " + d.units + "%"})
+    .style("color", "#000");
+
+    //add value of a unit square
+    var legend2 = d3.select("#legend")
+      .select('svg')
+      .append('g')
+      .attr('transform', "translate(100,0)");
+    });
+
+</script>
+
+<script>
+
+  var fill = d3.scale.category20b();
+  var data = [{word:"treat as physical health",weight:20},{word:"talk about it",weight:58},{word:"mental health days",weight:5},{word:"remove the stigma",weight:14},{word:"no overtime/work-life balance",weight:6},{word:"raise awareness",weight:18},{word:"education",weight:5},{word:"discussion",weight:19},{word:"work from home",weight:6},{word:"be open",weight:52},{word:"time off",weight:8},{word:"health benefits",weight:7},{word:"culture",weight:10},{word:"health days",weight:8}];
+  
+  var margin = {top: 20, right: 20, bottom: 30, left: 40},
+    width = 800 - margin.left - margin.right,
+    height = 500 - margin.top - margin.bottom;
+
+  var svg = d3.select("#div_template").append("svg")
+    .attr("width", width + margin.left + margin.right)
+    .attr("height", height + margin.top + margin.bottom)
+  .append("g")
+    .attr("transform", "translate(" + margin.left + "," + margin.top + ")");
+      
+  d3.layout.cloud().size([700, 500])
+      .words(data.map(function(d) {
+        return {text: d.word, size: d.weight};
+      }))
+      .padding(5)
+      .rotate(function() { return ~~(Math.random() * 2) * 90; })
+      .font("Arial")
+      .fontSize(function(d) { return d.size+10; })
+      .on("end", draw)
+      .start();
+
+  function draw(words) {
+      d3.select("body").append("svg")
+        .attr("width", 700)
+        .attr("height", 500)
+      .append("g")
+        .attr("transform", "translate(150,150)")
+      .selectAll("text")
+        .data(words)
+      .enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Arial")
+        .style("fill", function(d, i) { return fill(i); })
+        .attr("text-anchor", "middle")
+        .attr("transform", function(d) {
+          return "translate(" + [d.x+150, d.y+150] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+  }
+
+      d3.select("svg")
+      .selectAll("g")
+        .attr("transform", "translate(150,150)")
+      .selectAll("text")
+        .data(words).enter().append("text")
+        .style("font-size", function(d) { return d.size + "px"; })
+        .style("font-family", "Impact")
+        .style("fill", function(d, i) { return fill(i); })
+
+        .attr("transform", function(d) {
+
+          return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+        })
+        .text(function(d) { return d.text; });
+
+</script>
+
+</body>
+</html>
+
+<!-- Referred from http://bl.ocks.org/XavierGimenez/8070956 -->
